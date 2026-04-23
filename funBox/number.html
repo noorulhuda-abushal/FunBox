@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحدي التركيز ⚡</title>
+<style>
+  :root {
+    --bg: #1a252f;
+    --card-bg: #2c3e50;
+    --accent: #2ecc71;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --text: #f4f6f7;
+    --gold: #f1c40f;
+  }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* زر العودة للرئيسية الموحد */
+  .home-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 25px;
+    background: var(--red);
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 10001;
+    transition: 0.3s;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .home-btn:hover {
+    transform: scale(1.05);
+    background: #c0392b;
+  }
+
+  /* لوحة التعليمات */
+  #instructions-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 10000;
+  }
+
+  .instruction-card {
+    background: var(--card-bg);
+    padding: 40px; border-radius: 30px; border: 2px solid var(--accent);
+    text-align: center; max-width: 500px; width: 90%;
+    box-shadow: 0 0 30px rgba(46, 204, 113, 0.2);
+  }
+
+  .instruction-card h2 { color: var(--gold); font-size: 2rem; margin-bottom: 20px; }
+  .instruction-card ul { text-align: right; line-height: 2; margin-bottom: 30px; font-size: 1.1rem; list-style: none; padding: 0; }
+  .instruction-card li::before { content: "• "; color: var(--accent); font-weight: bold; }
+
+  .game-container {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 90%; max-width: 500px;
+    position: relative;
+  }
+
+  .timer-badge {
+    position: absolute; top: -15px; right: -15px;
+    background: var(--gold); color: #000;
+    width: 65px; height: 65px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 1.4rem; border: 4px solid var(--bg);
+  }
+
+  #number-display {
+    font-size: 7rem; height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px 0; color: var(--accent);
+    text-shadow: 0 0 25px rgba(46, 204, 113, 0.6);
+  }
+
+  input[type="number"] {
+    padding: 15px; font-size: 2rem; border-radius: 12px; border: 2px solid var(--accent);
+    width: 140px; text-align: center; margin-bottom: 15px; outline: none;
+    background: #1c2833; color: white;
+  }
+
+  .btn {
+    padding: 15px 30px; border: none; border-radius: 12px;
+    cursor: pointer; font-weight: bold; font-size: 1.2rem; width: 100%;
+    transition: 0.3s;
+  }
+
+  .btn-start { background: var(--accent); color: white; }
+  .btn-submit { background: var(--blue); color: white; display: none; }
+
+  .score-board { display: flex; justify-content: space-around; margin-bottom: 15px; }
+  .score-box { padding: 10px 15px; border-radius: 15px; font-weight: bold; min-width: 70px; }
+</style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn">🏠 القائمة الرئيسية</a>
+
+<div id="instructions-overlay">
+  <div class="instruction-card">
+    <h2>🎮 ارشادات اللعبة</h2>
+    <ul>
+      <li>يضغط الفريق الذي يظهر اسمه على الشاشة على زر (ابدأ) عند الاستعداد.</li>
+      <li>ستظهر مجموعة أرقام متتالية بسرعة (ربع ثانية) لكل رقم.</li>
+      <li>بعد اختفاء الأرقام، يجب كتابة ناتج الجمع الصحيح (يجب ان تكون الارقام باللغة الانجليزيه).</li>
+      <li>لكل إجابة صحيحة يحصل الفريق على نقطة واحدة.</li>
+      <li>الفريق الحاصل على أعلى نقاط في نهاية الجولات هو الفائز.</li>
+    </ul>
+    <button class="btn btn-start" onclick="closeInstructions()">فهمت، لنبدأ!</button>
+  </div>
+</div>
+
+<div class="game-container">
+  <div id="timer" class="timer-badge">30</div>
+  <h1 id="round-title">الجولة 1 (رقمين)</h1>
+  
+  <div class="score-board">
+    <div class="score-box" style="background:var(--red)">🍎 الأحمر: <span id="r-score">0</span></div>
+    <div class="score-box" style="background:var(--blue)">💎 الأزرق: <span id="b-score">0</span></div>
+  </div>
+
+  <div id="turn-display" style="font-size: 1.5rem; margin-bottom: 10px; font-weight: bold;">
+    دور الفريق: <span id="turn-txt" style="color:var(--red)">الأحمر</span>
+  </div>
+
+  <div id="number-display">؟</div>
+
+  <div id="input-area" style="display: none;">
+    <p>أدخل المجموع النهائي:</p>
+    <input type="number" id="user-answer" autofocus onkeydown="if(event.key==='Enter') checkAnswer()">
+    <button class="btn btn-submit" id="submit-btn" onclick="checkAnswer()">إرسال الإجابة ✅</button>
+  </div>
+
+  <button class="btn btn-start" id="start-btn" onclick="startSequence()">جاهز؟ ابدأ العرض ⚡</button>
+  <p id="status" style="margin-top:15px; font-weight:bold; height: 25px;"></p>
+</div>
+
+<script>
+  let round = 1;
+  let turn = "red";
+  let scores = { red: 0, blue: 0 };
+  let sum = 0;
+  let timeLeft = 30;
+  let timerInterval;
+
+  function closeInstructions() {
+    document.getElementById('instructions-overlay').style.display = 'none';
+  }
+
+  async function startSequence() {
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('status').innerText = "انتبه للشاشة...";
+    document.getElementById('status').style.color = "var(--gold)";
+    sum = 0;
+
+    const count = round + 1; 
+    
+    await new Promise(r => setTimeout(r, 1000));
+
+    for(let i=0; i<count; i++) {
+        let n = Math.floor(Math.random() * 9) + 1;
+        sum += n;
+        document.getElementById('number-display').innerText = n;
+        await new Promise(r => setTimeout(r, 250)); 
+        document.getElementById('number-display').innerText = "";
+        await new Promise(r => setTimeout(r, 150)); 
+    }
+
+    showInputArea();
+  }
+
+  function showInputArea() {
+    document.getElementById('number-display').innerText = "⌨️";
+    document.getElementById('input-area').style.display = 'block';
+    document.getElementById('submit-btn').style.display = 'block';
+    document.getElementById('timer').style.display = 'flex';
+    document.getElementById('user-answer').focus();
+    document.getElementById('status').innerText = "أدخل الناتج قبل انتهاء الوقت!";
+    startTimer();
+  }
+
+  function startTimer() {
+    timeLeft = 30;
+    document.getElementById('timer').innerText = timeLeft;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            checkAnswer(true); 
+        }
+    }, 1000);
+  }
+
+  function checkAnswer(isTimeUp = false) {
+    clearInterval(timerInterval);
+    document.getElementById('timer').style.display = 'none';
+    const userAns = parseInt(document.getElementById('user-answer').value);
+    const status = document.getElementById('status');
+
+    if (!isTimeUp && userAns === sum) {
+        scores[turn]++;
+        status.innerText = "إجابة صحيحة! +1 نقطة 🎯";
+        status.style.color = "var(--accent)";
+    } else {
+        status.innerText = isTimeUp ? `انتهى الوقت! المجموع: ${sum}` : `إجابة خاطئة! المجموع: ${sum}`;
+        status.style.color = "var(--red)";
+    }
+
+    document.getElementById('r-score').innerText = scores.red;
+    document.getElementById('b-score').innerText = scores.blue;
+
+    setTimeout(nextTurn, 2500);
+  }
+
+  function nextTurn() {
+    document.getElementById('user-answer').value = "";
+    document.getElementById('input-area').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('number-display').innerText = "؟";
+    document.getElementById('status').innerText = "";
+
+    if (turn === "red") {
+        turn = "blue";
+        document.getElementById('turn-txt').innerText = "الأزرق";
+        document.getElementById('turn-txt').style.color = "var(--blue)";
+    } else {
+        turn = "red";
+        document.getElementById('turn-txt').innerText = "الأحمر";
+        document.getElementById('turn-txt').style.color = "var(--red)";
+        
+        if (round < 5) {
+            round++;
+            document.getElementById('round-title').innerText = `الجولة ${round} (${round + 1} أرقام)`;
+        } else {
+            endGame();
+            return;
+        }
+    }
+    document.getElementById('start-btn').style.display = 'block';
+    document.getElementById('start-btn').innerText = `دور الفريق ${turn === 'red' ? 'الأحمر' : 'الأزرق'} - ابدأ 🚀`;
+  }
+
+  function endGame() {
+    let result = scores.red > scores.blue ? "الفريق الأحمر 🍎" : (scores.blue > scores.red ? "الفريق الأزرق 💎" : "تعادل!");
+    document.querySelector('.game-container').innerHTML = `
+        <h1 style="color:var(--gold)">🏁 نهاية التحدي</h1>
+        <h2 style="margin: 20px 0;">الفائز: <span style="color:var(--accent)">${result}</span></h2>
+        <div style="font-size:2.5rem; background:rgba(255,255,255,0.1); padding:20px; border-radius:20px; margin-bottom:20px;">
+            <span style="color:var(--red)">${scores.red}</span> - <span style="color:var(--blue)">${scores.blue}</span>
+        </div>
+        <button class="btn btn-start" onclick="location.reload()">تحدي جديد 🔄</button>
+    `;
+  }
+</script>
+</body>
+</html>

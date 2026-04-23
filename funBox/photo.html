@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحدي الذاكرة 🧠</title>
+<style>
+  :root {
+    --bg: #1a252f;
+    --card-bg: #2c3e50;
+    --accent: #f39c12;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --text: #f4f6f7;
+    --green: #2ecc71;
+  }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* زر العودة للرئيسية الموحد */
+  .home-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 25px;
+    background: var(--red);
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 10001;
+    transition: 0.3s;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .home-btn:hover {
+    transform: scale(1.05);
+    background: #c0392b;
+  }
+
+  .permanent-score {
+    position: fixed; top: 20px; left: 20px;
+    display: flex; gap: 10px; z-index: 100;
+  }
+  .score-item {
+    padding: 10px 20px; border-radius: 10px; font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    color: white;
+  }
+
+  .game-container {
+    background: var(--card-bg);
+    padding: 25px; border-radius: 30px;
+    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 95%; max-width: 850px; position: relative;
+  }
+
+  #word-cloud {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 12px; margin: 20px 0; min-height: 300px;
+    padding: 20px; background: rgba(0,0,0,0.2); border-radius: 20px;
+    display: none;
+  }
+
+  .word-item {
+    padding: 8px; background: var(--accent);
+    color: white; border-radius: 10px; font-weight: bold;
+    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .timer-bar {
+    width: 100%; height: 12px; background: #34495e; border-radius: 6px; overflow: hidden; margin: 15px 0;
+  }
+  #progress { width: 100%; height: 100%; background: var(--green); transition: 1s linear; }
+
+  .input-section { display: none; margin-top: 20px; animation: fadeIn 0.5s; }
+  .inputs-wrapper { display: flex; justify-content: space-around; gap: 20px; margin-bottom: 20px; }
+  .team-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; flex: 1; }
+  
+  input[type="number"] {
+    width: 80px; padding: 10px; font-size: 1.5rem; border-radius: 10px; border: 2px solid var(--accent);
+    text-align: center; background: #1c2833; color: white;
+  }
+
+  .btn { padding: 15px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.3s; }
+  .btn:active { transform: scale(0.95); }
+  .btn-primary { background: var(--green); color: white; width: 100%; }
+  .btn-review { background: var(--blue); color: white; width: 100%; margin-top: 10px; display: none; }
+
+  #instructions-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="home-btn">🏠 القائمة الرئيسية</a>
+
+<div id="instructions-overlay">
+  <div class="game-container" style="max-width: 550px;">
+    <h2 style="color:var(--accent)">🧠 ارشادات اللعبة</h2>
+    <ul style="text-align: right; line-height: 1.8; font-size: 1.1rem;">
+      <li>تظهر <b>20 كلمة</b> متنوعة لمدة 20 ثانية.</li>
+      <li>بعد الاختفاء، يسجل كل فريق ما يتذكره في (ورقة أو جهاز خارجي).</li>
+      <li>بعد الانتهاء من التسجيل، اضغطوا زر <b>"إظهار الكلمات للمراجعة"</b>.</li>
+      <li>قارنوا إجاباتكم وسجلوا عدد النقاط الصحيحة لكل فريق.</li>
+    </ul>
+    <button class="btn btn-primary" onclick="document.getElementById('instructions-overlay').style.display='none'">موافق، ابدأ الآن!</button>
+  </div>
+</div>
+
+<div class="permanent-score">
+  <div class="score-item" style="background:var(--red)">🍎: <span id="r-total">0</span></div>
+  <div class="score-item" style="background:var(--blue)">💎: <span id="b-total">0</span></div>
+</div>
+
+<div class="game-container">
+  <h1 id="round-title">الجولة 1</h1>
+  <div id="status" style="font-weight: bold; color: var(--accent); height: 25px;"></div>
+  
+  <div class="timer-bar"><div id="progress"></div></div>
+
+  <div id="word-cloud"></div>
+
+  <div class="input-section" id="input-area">
+    <div class="inputs-wrapper">
+      <div class="team-box" style="border-bottom: 5px solid var(--red);">
+        <h3 style="color:var(--red)">الفريق الأحمر</h3>
+        <p>كم كلمة صحيحة؟</p>
+        <input type="number" id="score-red" value="0" min="0" max="20">
+      </div>
+      <div class="team-box" style="border-bottom: 5px solid var(--blue);">
+        <h3 style="color:var(--blue)">الفريق الأزرق</h3>
+        <p>كم كلمة صحيحة؟</p>
+        <input type="number" id="score-blue" value="0" min="0" max="20">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="submitScores()">تأكيد النقاط والجولة التالية 🏆</button>
+  </div>
+
+  <button class="btn btn-primary" id="start-btn" onclick="startRound()">إظهار الكلمات ⚡</button>
+  <button class="btn btn-review" id="review-btn" onclick="showReview()">إظهار الكلمات للمراجعة 🔍</button>
+</div>
+
+<script>
+  let currentRound = 0;
+  let totalScores = { red: 0, blue: 0 };
+  
+  const allWords = [
+    ["مظلة", "قمر", "قهوة", "مفتاح", "صقر", "غيمة", "كتاب", "دراجة", "ساعة", "عطر", "نظارة", "كرسي", "شجرة", "بحر", "قلم", "كرة", "نمر", "خبز", "باب", "هاتف"],
+    ["برق", "سفينة", "جبل", "وردة", "طائرة", "روبوت", "ملح", "بركان", "ثلج", "خاتم", "حذاء", "حقيبة", "سماعة", "نجمة", "أسد", "موز", "برتقال", "نحلة", "قصر", "شاحنة"],
+    ["خريطة", "بوصلة", "رمال", "غابة", "عشب", "نهر", "فيل", "حصان", "قبعة", "سكين", "شوكة", "مرايا", "سرير", "نافذة", "مذياع", "لوحة", "مقص", "شمعة", "جرس", "خيط"],
+    ["ماس", "ذهب", "فضة", "زمرد", "ياقوت", "مطر", "شمس", "كوكب", "خيمة", "صياد", "محرك", "وقود", "خوذة", "رمح", "درع", "تاج", "وشاح", "وسادة", "قماش", "بخور"]
+  ];
+
+  function startRound() {
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('status').innerText = "احفظوا الكلمات الآن!";
+    const cloud = document.getElementById('word-cloud');
+    cloud.innerHTML = '';
+    cloud.style.display = 'grid';
+
+    allWords[currentRound].forEach(w => {
+      const div = document.createElement('div');
+      div.className = 'word-item';
+      div.innerText = w;
+      cloud.appendChild(div);
+    });
+
+    let width = 100;
+    const progress = document.getElementById('progress');
+    const interval = setInterval(() => {
+      width -= (100/20); // تم التعديل إلى 20 ثانية
+      progress.style.width = width + '%';
+      if(width <= 0) {
+        clearInterval(interval);
+        hideWords();
+      }
+    }, 1000);
+  }
+
+  function hideWords() {
+    document.getElementById('word-cloud').style.display = 'none';
+    document.getElementById('status').innerText = "انتهى الوقت! سجلوا إجاباتكم جانباً.";
+    document.getElementById('review-btn').style.display = 'block';
+  }
+
+  function showReview() {
+    document.getElementById('word-cloud').style.display = 'grid';
+    document.getElementById('review-btn').style.display = 'none';
+    document.getElementById('input-area').style.display = 'block';
+    document.getElementById('status').innerText = "راجعوا إجاباتكم وأدخلوا النتائج.";
+  }
+
+  function submitScores() {
+    const rPoints = parseInt(document.getElementById('score-red').value) || 0;
+    const bPoints = parseInt(document.getElementById('score-blue').value) || 0;
+
+    totalScores.red += rPoints;
+    totalScores.blue += bPoints;
+
+    document.getElementById('r-total').innerText = totalScores.red;
+    document.getElementById('b-total').innerText = totalScores.blue;
+
+    currentRound++;
+    if(currentRound < 4) {
+      resetNextRound();
+    } else {
+      showWinner();
+    }
+  }
+
+  function resetNextRound() {
+    document.getElementById('input-area').style.display = 'none';
+    document.getElementById('word-cloud').style.display = 'none';
+    document.getElementById('start-btn').style.display = 'block';
+    document.getElementById('score-red').value = 0;
+    document.getElementById('score-blue').value = 0;
+    document.getElementById('progress').style.width = '100%';
+    document.getElementById('round-title').innerText = `الجولة ${currentRound + 1}`;
+    document.getElementById('status').innerText = "استعدوا للجولة القادمة...";
+  }
+
+  function showWinner() {
+    let winner = totalScores.red > totalScores.blue ? "الفريق الأحمر 🍎" : (totalScores.blue > totalScores.red ? "الفريق الأزرق 💎" : "تعادل!");
+    document.querySelector('.game-container').innerHTML = `
+      <h1 style="color:var(--accent)">🏆 النتيجة النهائية</h1>
+      <h2>الفائز: ${winner}</h2>
+      <div style="font-size:3.5rem; margin:20px; font-weight:900;">
+        <span style="color:var(--red)">${totalScores.red}</span> - <span style="color:var(--blue)">${totalScores.blue}</span>
+      </div>
+      <button class="btn btn-primary" onclick="location.reload()">تحدي جديد 🔄</button>
+    `;
+  }
+</script>
+</body>
+</html>

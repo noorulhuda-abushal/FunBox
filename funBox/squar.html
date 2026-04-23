@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 تحدي المربعات  🚀</title>
+
+<style>
+  :root {
+    --body-bg: #2c3e50;
+    --container-bg: #34495e;
+    --board-bg: #212f3d;
+    --cell-empty: #1c2833;
+    --cell-border: #566573;
+    --text-main: #f4f6f7;
+    --text-muted: #abb2b9;
+    --red-team: #e74c3c;
+    --blue-team: #3498db;
+    --pop-card-bg: #2c3e50;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    background-color: var(--body-bg);
+    margin: 0; padding: 20px;
+    min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    color: var(--text-main);
+  }
+
+  .home-btn {
+    position: fixed; top: 20px; right: 20px; padding: 10px 20px;
+    background: #c0392b; color: white; text-decoration: none;
+    border-radius: 12px; font-weight: bold; z-index: 3000;
+    border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s;
+  }
+  .home-btn:hover { background: #455a64; transform: translateY(-2px); }
+
+  .main-container {
+    max-width: 650px; width: 100%;
+    background: var(--container-bg);
+    padding: 25px; border-radius: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    z-index: 1;
+  }
+
+  .score-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; }
+  .score-box { padding: 10px 20px; border-radius: 15px; font-size: 1.2rem; font-weight: 900; color: white; min-width: 80px; }
+  .red-box { background-color: var(--red-team); }
+  .blue-box { background-color: var(--blue-team); }
+
+  .hint-status { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 0.9rem; }
+  .hint-badge { background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+
+  .board {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px;
+    background: var(--board-bg); padding: 15px; border-radius: 20px;
+  }
+
+  .cell {
+    aspect-ratio: 1 / 1; background: var(--cell-empty); border-radius: 10px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--cell-border); font-size: 1.8rem; transition: 0.2s;
+  }
+
+  #instructions-overlay, #popup-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95); display: flex; justify-content: center; align-items: center; z-index: 2000;
+  }
+
+  .card {
+    background: var(--pop-card-bg); padding: 30px; border-radius: 25px;
+    width: 90%; max-width: 500px; text-align: right; border: 3px solid var(--cell-border);
+  }
+
+  .btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin: 5px; transition: 0.2s; font-family: inherit; }
+  .btn-check { background: #566573; color: white; width: 97%; }
+  .btn-hint { background: #f1c40f; color: #2c3e50; width: 97%; }
+  .btn-yes { background: #2ecc71; color: white; flex: 1; }
+  .btn-no { background: #e67e22; color: white; flex: 1; }
+  .btn-remove { background: #e74c3c; color: white; width: 97%; margin-top: 15px; border: 2px dashed white; }
+  .btn-start { background: var(--text-main); color: var(--body-bg); width: 100%; margin-top: 20px; font-size: 1.2rem; text-align: center; }
+
+  #a, #hint-text { display:none; background: #1c2833; padding: 15px; border-radius: 12px; margin: 10px 0; border: 2px solid #2ecc71; color: #2ecc71; font-weight: bold; font-size: 1.3rem; text-align: center; }
+  #hint-text { border-color: #f1c40f; color: #f1c40f; }
+  h2 { text-align: center; margin-top: 0; color: #f1c40f; }
+  .instr-content { line-height: 1.8; color: var(--text-muted); font-size: 1rem; }
+</style>
+</head>
+
+<body>
+
+<div class="home-btn" onclick="window.location.href='index.html'">🏠 الصفحة الرئيسية</div>
+
+<div id="instructions-overlay">
+  <div class="card">
+    <h2>📋 ارشادات اللعبة</h2>
+    <div class="instr-content">
+      <p>1️⃣ <b>نظام اللعب:</b> يتناوب الفريقان <b>الأحمر 🍎</b> و <b>الأزرق 💎</b>. عند الاتفاق على إجابة، اضغط "إظهار الإجابة".</p>
+      <p>2️⃣ <b>طريقة الفوز:</b> أول فريق يوصل <b>5 مربعات متتالية</b> (أفقي، عمودي، أو قطري) يفوز.</p>
+      <p>3️⃣ <b>💡 التلميحات:</b> 3 فرص لكل فريق. يظهر أول حرف مع <b>تجاهل "الـ" التعريف</b>.</p>
+      <p>4️⃣ <b>🔢 الأرقام:</b> إذا كانت الإجابة رقماً، <b>لن تُخصم</b> فرصة التلميح لأن التلميح غير متاح للأرقام.</p>
+      <p>5️⃣ <b>🔄 التراجع:</b> لإزالة نقطة وضعت بالخطأ، اضغط المربع واختر <b>"إزالة النقطة"</b>.</p>
+    </div>
+    <button class="btn btn-start" onclick="document.getElementById('instructions-overlay').style.display='none'">ابدأ التحدي 🚀</button>
+  </div>
+</div>
+
+<div class="main-container">
+  <div class="score-container">
+    <div class="score-box red-box">🍎 <span id="rs">0</span></div>
+    <div style="background:#212f3d; padding:10px 20px; border-radius:12px; font-weight:bold; border:1px solid #566573;">الدور: <span id="turn-icon" style="color:var(--red-team)">🍎</span></div>
+    <div class="score-box blue-box">💎 <span id="bs">0</span></div>
+  </div>
+  <div class="hint-status">
+    <div class="hint-badge">تلميحات الأحمر: <span id="rh">3</span> 💡</div>
+    <div class="hint-badge">تلميحات الأزرق: <span id="bh">3</span> 💡</div>
+  </div>
+  <div class="board" id="board"></div>
+</div>
+
+<div id="popup-overlay" style="display:none">
+  <div class="card" style="text-align:center">
+    <h3 id="q" style="margin-bottom:20px; color:white;">السؤال...</h3>
+    <button id="hint-btn" class="btn btn-hint" onclick="useHint()">💡 طلب تلميح</button>
+    <div id="hint-text"></div>
+    <button class="btn btn-check" onclick="document.getElementById('a').style.display='block'">🔍 إظهار الإجابة الصحيحة</button>
+    <div id="a"></div>
+    <p style="margin-top:20px;">هل كانت إجابة الفريق صحيحة؟</p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-yes" onclick="handle(true)">✅ نعم</button>
+      <button class="btn btn-no" onclick="handle(false)">❌ لا</button>
+    </div>
+    <button id="remove-btn" class="btn btn-remove" onclick="removePoint()">🗑️ إزالة النقطة (تراجع)</button>
+    <button class="btn btn-check" style="background:#34495e; margin-top:10px;" onclick="closePopup()">إغلاق</button>
+  </div>
+</div>
+
+<script>
+let questions = [
+    {q:"ما هي الدولة التي ليس لها عاصمة رسمية؟", a:"سويسرا"},
+    {q:"ما هو العنصر الأكثر وفرة في الكون؟", a:"الهيدروجين"},
+    {q:"ما اسم أكبر صحراء حارة في العالم؟", a:"الصحراء الكبرى"},
+    {q:"شيء يمشي بلا قدمين ويبكي بلا عينين؟", a:"السحاب"},
+    {q:"ما الشيء الذي كلما زاد نقص؟", a:"العمر"},
+    {q:"عملية تحول فيها النباتات الضوء إلى طاقة؟", a:"البناء الضوئي"},
+    {q:"من هو أول خليفة أموي؟", a:"معاوية بن أبي سفيان"},
+    {q:"كلما أخذت منه كبر، ما هو؟", a:"الحفرة"},
+    {q:"ما هو الشيء الذي له أسنان ولا يعض؟", a:"المشط"},
+    {q:"ما الشيء الذي يُكسر دون أن يُلمس؟", a:"الوعد"},
+    {q:"كم عدد الكروموسومات في جسم الإنسان الطبيعي؟", a:"46"},
+    {q:"ما هو أسرع كوكب يدور حول الشمس؟", a:"عطارد"},
+    {q:"تمثيل الشيء بشيء آخر باستخدام (مثل، كـ)؟", a:"التشبيه"},
+    {q:"كلمة لها نفس المعنى لكلمة أخرى؟", a:"مرادف"},
+    {q:"عملية تحويل الطعام إلى طاقة في الجسم؟", a:"الهضم"},
+    {q:"المصطلح الذي يعبر عن فرق الطاقة بين نقطتين؟", a:"الجهد الكهربائي"},
+    {q:"مقدار الحيز الذي يشغله الجسم؟", a:"الحجم"},
+    {q:"كل ما له كتلة ويشغل حيزًا؟", a:"المادة"},
+    {q:"التطهر من الحدث الأصغر؟", a:"الوضوء"},
+    {q:"ما لا يُثاب فاعله ولا يُعاقب تاركه؟", a:"مباح"},
+    {q:"الاعتقاد بوجود إله مع الله؟", a:"الشرك"},
+    {q:"تحمل الشدائد دون جزع؟", a:"الصبر"},
+    {q:"الرجوع إلى الله وترك الذنب؟", a:"التوبة"},
+    {q:"ناتج قسمة القوة على المساحة؟", a:"الضغط"},
+    {q:"تدفق الشحنات الكهربائية؟", a:"التيار الكهربائي"},
+    {q:"نبي الله الذي ابتلعه الحوت؟", a:"يونس عليه السلام"},
+    {q:"السورة التي تُسمى قلب القرآن؟", a:"يس"},
+    {q:"ما اسم والد النبي ﷺ؟", a:"عبد الله"},
+    {q:"مكان لتخزين البيانات بشكل منظم؟", a:"قاعدة البيانات"},
+    {q:"العملية التي تحول السائل إلى غاز؟", a:"التبخر"},
+    {q:"ما اسم أطول آية في القرآن؟", a:"آية الدين"},
+    {q:"الجهاز المسؤول عن نقل الدم في الجسم؟", a:"الجهاز الدوري"},
+    {q:"إنفاق المال في سبيل الله تطوعاً؟", a:"الصدقة"},
+    {q:"أصغر وحدة في بناء المادة؟", a:"الذرة"},
+    {q:"مجموعة من التعليمات لتنفيذ مهمة؟", a:"خوارزمية"},
+    {q:"كل ما أُحدث في الدين وليس له أصل؟", a:"البدعة"},
+    {q:"ما يُثاب فاعله ولا يُعاقب تاركه؟", a:"السنة"},
+    {q:"برنامج ضار يهاجم الأجهزة الإلكترونية؟", a:"فيروس"},
+    {q:"ما عاصمة فرنسا؟", a:"باريس"},
+    {q:"أكبر كوكب في المجموعة الشمسية؟", a:"المشتري"},
+    {q:"المسافة ÷ الزمن = ؟", a:"السرعة"},
+    {q:"ما أطول نهر في العالم؟", a:"النيل"},
+    {q:"من هو أول خليفة في الإسلام؟", a:"أبو بكر الصديق"},
+    {q:"ما اسم أول سورة في القرآن؟", a:"الفاتحة"},
+    {q:"من هو مؤسس علم الجبر؟", a:"الخوارزمي"},
+    {q:"ما أسرع طائر في العالم؟", a:"الصقر"},
+    {q:"قوة تعيق الحركة؟", a:"الاحتكاك"},
+    {q:"من هو مخترع المصباح الكهربائي؟", a:"اديسون"},
+    {q:"ما اسم أطول سور في العالم؟", a:"سور الصين العظيم"},
+    {q:"اضطراب مكاني ينقل الطاقة؟", a:"الموجة"},
+    {q:"ما أكبر حيوان في العالم؟", a:"الحوت الأزرق"},
+    {q:"طاقة ناتجة عن حركة الجسم؟", a:"الطاقة الحركية"},
+    {q:"كم عدد حروف اللغة العربية؟", a:"28"},
+    {q:"ما المعدن الذي يرمز له بالرمز Au؟", a:"ذهب"},
+    {q:"تغير السرعة المتجهة مع الزمن؟", a:"التسارع"},
+    {q:"كم عدد ألوان قوس قزح؟", a:"7"},
+    {q:"طاقة مخزنة في الجسم بسبب وضعه؟", a:"الطاقة الكامنة"},
+    {q:"مقدار ما يحتويه الجسم من مادة؟", a:"الكتلة"},
+    {q:"كم عدد عظام جسم الإنسان؟", a:"206"},
+    {q:"ما الحيوان الذي ينام واقفاً؟", a:"الحصان"},
+    {q:"ما لون حجر الزمرد؟", a:"اخضر"},
+    {q:"القدرة على بذل شغل؟", a:"الطاقة"},
+    {q:"ما أكبر دولة في العالم مساحة؟", a:"روسيا"},
+    {q:"ما عاصمة تركيا؟", a:"انقرة"},
+    {q:"عبادة الله كأنك تراه؟", a:"الإحسان"},
+    {q:"السرعة في اتجاه محدد؟", a:"السرعة المتجهة"},
+    {q:"الوحدة الأساسية لقياس شدة التيار؟", a:"الأمبير"},
+    {q:"العلم الذي يدرس بقايا الحضارات بالتنقيب؟", a:"علم الآثار"},
+    {q:"مكان إنتاج خلايا الدم الحمراء؟", a:"نخاع العظم"},
+    {q:"انحراف الضوء عند مروره بين وسطين؟", a:"الانكسار"},
+    {q:"الغدة التي تسمى سيدة الغدد؟", a:"الغدة النخامية"},
+    {q:"العالم الملقب بأبو الكيمياء؟", a:"جابر بن حيان"},
+    {q:"الغاز صاحب النسبة الأكبر في الهواء؟", a:"النيتروجين"},
+    {q:"المعدن السائل في درجة الحرارة العادية؟", a:"الزئبق"},
+    {q:"أصغر قارة في العالم مساحة؟", a:"أستراليا"},
+    {q:"الدولة التي بها أكبر عدد أهرامات؟", a:"السودان"},
+    {q:"مدن بلا بيوت وجبال بلا شجر؟", a:"الخريطة"},
+    {q:"يتحدث كل اللغات وليس له لسان؟", a:"صدى الصوت"}
+];
+
+questions.sort(() => Math.random() - 0.5);
+
+let boardState = Array(64).fill(null), turn = "red", rScore = 0, bScore = 0, rHints = 3, bHints = 3;
+let currentCell = null, cellIdx = null, currentQ = null;
+
+function createBoard() {
+  const b = document.getElementById("board");
+  for(let i=0; i<64; i++) {
+    let c = document.createElement("div");
+    c.className = "cell";
+    c.onclick = () => { currentCell = c; cellIdx = i; openPopup(); };
+    b.appendChild(c);
+  }
+}
+
+function openPopup() {
+  const isUsed = currentCell.classList.contains("used");
+  document.getElementById("remove-btn").style.display = isUsed ? "block" : "none";
+  if (!isUsed) {
+    if(questions.length === 0) { alert("انتهت الأسئلة!"); return; }
+    currentQ = questions.shift(); 
+    document.getElementById("q").innerText = currentQ.q;
+    document.getElementById("a").innerText = currentQ.a;
+    document.getElementById("hint-btn").style.display = "block";
+  } else {
+    document.getElementById("q").innerText = "إدارة المربع";
+    document.getElementById("a").innerText = "المربع محجوز";
+    document.getElementById("hint-btn").style.display = "none";
+  }
+  document.getElementById("a").style.display = "none";
+  document.getElementById("hint-text").style.display = "none";
+  document.getElementById("popup-overlay").style.display = "flex";
+}
+
+function useHint() {
+  let ans = currentQ.a.toString().trim();
+  if (!isNaN(ans)) {
+    document.getElementById("hint-text").innerText = "⚠️ إجابة رقمية.. التلميح لا يخصم رصيداً";
+    document.getElementById("hint-text").style.display = "block";
+    return;
+  }
+  let h = (turn === "red") ? rHints : bHints;
+  if (h > 0) {
+    if (turn === "red") { rHints--; document.getElementById("rh").innerText = rHints; }
+    else { bHints--; document.getElementById("bh").innerText = bHints; }
+    let p = ans.startsWith("ال") ? ans.substring(2) : ans;
+    document.getElementById("hint-text").innerText = "💡 يبدأ بحرف ( " + p.charAt(0) + " )";
+    document.getElementById("hint-text").style.display = "block";
+  } else { alert("نفدت التلميحات!"); }
+}
+
+function handle(correct) {
+  if(correct && !currentCell.classList.contains("used")) {
+    currentCell.style.backgroundColor = turn === "red" ? "var(--red-team)" : "var(--blue-team)";
+    currentCell.innerHTML = turn === "red" ? "🍎" : "💎";
+    currentCell.classList.add("used");
+    boardState[cellIdx] = turn;
+    if(turn === "red") rScore++; else bScore++;
+    updateScores(); checkWinner(turn); toggleTurn();
+  }
+  closePopup();
+}
+
+function removePoint() {
+  if (currentCell.classList.contains("used")) {
+    if (boardState[cellIdx] === "red") rScore--; else bScore--;
+    boardState[cellIdx] = null;
+    currentCell.style.backgroundColor = "var(--cell-empty)";
+    currentCell.innerHTML = "";
+    currentCell.classList.remove("used");
+    updateScores();
+  }
+  closePopup();
+}
+
+function toggleTurn() {
+  turn = (turn === "red") ? "blue" : "red";
+  document.getElementById("turn-icon").innerText = turn === "red" ? "🍎" : "💎";
+  document.getElementById("turn-icon").style.color = turn === "red" ? "var(--red-team)" : "var(--blue-team)";
+}
+
+function updateScores() {
+  document.getElementById("rs").innerText = rScore;
+  document.getElementById("bs").innerText = bScore;
+}
+
+function closePopup() { document.getElementById("popup-overlay").style.display = "none"; }
+
+function checkWinner(player) {
+  const size = 8;
+  for (let i = 0; i < 64; i++) {
+    if (boardState[i] !== player) continue;
+    let dirs = [{x:1,y:0}, {x:0,y:1}, {x:1,y:1}, {x:1,y:-1}];
+    for (let d of dirs) {
+      let count = 1;
+      for (let s = 1; s < 5; s++) {
+        let r = Math.floor(i / size) + d.y * s;
+        let c = (i % size) + d.x * s;
+        if (r >= 0 && r < size && c >= 0 && c < size && boardState[r * size + c] === player) count++; else break;
+      }
+      if (count === 5) { alert("🎉 مبروك! فاز الفريق " + (player==="red"?"الأحمر":"الأزرق")); return; }
+    }
+  }
+}
+createBoard();
+</script>
+</body>
+</html>
