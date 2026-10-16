@@ -4,7 +4,7 @@ An Arabic party-games website where two teams (🍎 Red vs 💎 Blue) compete in
 No installation needed: it runs directly in the browser.
 
 ## ▶️ Play it here
-👉 https://nmazenabushal-del.github.io/FunBox/funBox/
+👉 https://noorulhuda-abushal.github.io/FunBox/funBox/
 
 ![FunBox main menu](menu.png)
 
