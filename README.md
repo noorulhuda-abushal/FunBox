@@ -3,6 +3,10 @@
 An Arabic party-games website where two teams (🍎 Red vs 💎 Blue) compete in fun brain challenges.
 No installation needed: it runs directly in the browser.
 
+## ▶️ Play it here
+👉 https://nmazenabushal-del.github.io/FunBox/funBox/
+
+![FunBox main menu](menu.png)
 
 ## 🕹 The Games
 
@@ -12,15 +16,21 @@ No installation needed: it runs directly in the browser.
 - **First team to connect 5 squares in a row** (horizontal, vertical, or diagonal) wins
 - Each team gets 3 hints that reveal the first letter of the answer
 
+![Squares Challenge](squares.png)
+
 ### ⚡ Focus Challenge
 - Numbers flash on the screen very quickly (a quarter of a second each)
 - The team must type the correct sum within 30 seconds
 - Gets harder each round: from 2 numbers up to 6
 
+![Focus Challenge](focus.png)
+
 ### 🧠 Memory Challenge
 - 20 words appear for 20 seconds, then disappear
 - Each team writes down as many words as they remember
 - 4 rounds, and the team with the most correct words wins
+
+![Memory Challenge](memory.png)
 
 ## ✨ Features
 - Live scoreboard for both teams
